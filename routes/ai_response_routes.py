@@ -13,4 +13,3 @@ def ask_ai(request: AIRequest):
         return AIResponse(response=response)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
-    

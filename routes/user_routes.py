@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from db import get_db
 from models import User
@@ -8,7 +9,25 @@ from schemas.Token_schemas import Token, TokenRefresh, LoginRequest
 from utils.jwt_handler import create_tokens, verify_token
 
 router = APIRouter()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    payload = verify_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=401,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    email: str = payload.get("email")
+    if email is None:
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
+    
+    user_repo = UserRepo(db)
+    user = user_repo.get_user_by_email(email)
+    if user is None:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
 
 @router.post("/signup")
 def signup(user: UserSchema, db: Session = Depends(get_db)):
@@ -57,3 +76,12 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="User not found")
     
     return create_tokens(user.id, user.email)
+
+@router.get("/me")
+def read_users_me(current_user: User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "username": current_user.email.split("@")[0] # Or whatever username logic you have
+    }
+
