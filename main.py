@@ -27,9 +27,15 @@ app.include_router(email_router)
 engine=create_engine(DATABASE_URL)
 Base.metadata.create_all(engine)
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def read_root():
     return {"Hello": "World"}
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    from fastapi import Response
+    return Response(status_code=204)
 
 
 
