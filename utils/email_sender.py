@@ -3,8 +3,8 @@ from email.message import EmailMessage
 from dotenv import load_dotenv
 import os
 load_dotenv()
-app_password = os.environ["app_password"]
-sender_email = os.environ["sender_email"]
+app_password = os.getenv("app_password")
+sender_email = os.getenv("sender_email")
 
 # Email details
 def send_email(receiver_email: str, subject: str, content: str) -> str:
@@ -14,6 +14,9 @@ def send_email(receiver_email: str, subject: str, content: str) -> str:
     msg["To"] = receiver_email
     msg["Subject"] = subject
     msg.set_content(content)
+
+    if not app_password or not sender_email:
+        return "Email sending is unavailable: credentials not configured."
 
     # Send email
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:

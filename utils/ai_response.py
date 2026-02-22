@@ -7,12 +7,14 @@ from dotenv import load_dotenv
 load_dotenv()
 endpoint = "https://models.github.ai/inference"
 model = "gpt-4o-mini"
-token = os.environ["sir_token"]
+token = os.getenv("sir_token")
 
-client = ChatCompletionsClient(
-    endpoint=endpoint,
-    credential=AzureKeyCredential(token),
-)
+client = None
+if token:
+    client = ChatCompletionsClient(
+        endpoint=endpoint,
+        credential=AzureKeyCredential(token),
+    )
 
 def get_completion(user_message, images=None, system_message="You are a helpful assistant."):
     """
